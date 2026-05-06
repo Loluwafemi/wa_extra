@@ -64,6 +64,4 @@ Made with ❤️ by Loluwafemi
 
 Last updated: May 1, 2026
 
-# wa-lead-miner
-# wa-lead-miner
-# wa_extra
+### wa_extra

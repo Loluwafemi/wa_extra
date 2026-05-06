@@ -1,0 +1,82 @@
+name: Create Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'workflow.json'
+      - 'README.md'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[no-release]')"
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current version
+        id: version
+        run: |
+          # Generate version based on date
+          VERSION=$(date +'%Y.%m.%d')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "📦 Release version: ${VERSION}"
+
+      - name: Check if tag exists
+        id: check_tag
+        continue-on-error: true
+        run: |
+          git fetch --tags
+          git rev-parse ${{ steps.version.outputs.tag }}
+          echo "tag_exists=true" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.check_tag.outcome == 'failure'
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "n8n WhatsApp Broadcast - ${{ steps.version.outputs.version }}"
+          body: |
+            # n8n WhatsApp Broadcast Workflow Release
+            
+            **Version:** ${{ steps.version.outputs.version }}
+            **Released:** ${{ github.event.head_commit.timestamp }}
+            **Commit:** ${{ github.event.head_commit.id }}
+            
+            ## What's Included
+            - ✅ Complete n8n workflow for WhatsApp broadcasting
+            - ✅ Support for Excel file imports
+            - ✅ Automatic deduplication of contacts
+            - ✅ Batch processing (50 contacts per batch)
+            - ✅ Personalized messaging
+            
+            ## Quick Start
+            1. Import the `workflow.json` into your n8n instance
+            2. Configure WhatsApp Business Phone Number ID
+            3. Upload Excel file with Business Name and Phone columns
+            4. Run the workflow
+            
+            ## Documentation
+            See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for complete documentation.
+            
+            ## Support
+            - Email: handssistance@gmail.com
+            - Email: shokefunfemi@gmail.com
+            
+          draft: false
+          prerelease: false
+          files: |
+            workflow.json
+            README.md
+
+      - name: Release already exists
+        if: steps.check_tag.outcome == 'success'
+        run: |
+          echo "ℹ️ Release ${{ steps.version.outputs.tag }} already exists. Skipping creation."

@@ -1,0 +1,107 @@
+name: Documentation Check
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'README.md'
+      - 'workflow.json'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  check-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate README.md exists
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "❌ README.md not found"
+            exit 1
+          fi
+          echo "✅ README.md found"
+
+      - name: Fix file encoding
+        run: |
+          # Convert file to UTF-8 without BOM
+          file README.md
+          iconv -f UTF-16 -t UTF-8 README.md > README.md.tmp 2>/dev/null || iconv -f UTF-8 -t UTF-8 README.md > README.md.tmp 2>/dev/null || cp README.md README.md.tmp
+          mv README.md.tmp README.md
+          echo "✅ File encoding normalized"
+
+      - name: Validate README sections
+        run: |
+          python3 << 'EOF'
+          import sys
+          
+          # Read file with binary mode and decode with error handling
+          try:
+            with open('README.md', 'rb') as f:
+              content_bytes = f.read()
+            
+            # Try different encodings
+            content = None
+            for encoding in ['utf-8', 'utf-8-sig', 'iso-8859-1', 'cp1252']:
+              try:
+                content = content_bytes.decode(encoding)
+                print(f"✅ File decoded as: {encoding}")
+                break
+              except:
+                continue
+            
+            if content is None:
+              # Last resort: decode with errors='ignore'
+              content = content_bytes.decode('utf-8', errors='ignore')
+              print("⚠️ File decoded with error handling")
+          
+          except Exception as e:
+            print(f"❌ Error reading README.md: {e}")
+            sys.exit(1)
+          
+          # Check required sections
+          required_sections = [
+            'WhatsApp Broadcast',
+            'Overview',
+            'Features',
+            'Prerequisites',
+            'Workflow Steps',
+            'Configuration'
+          ]
+          
+          missing_sections = []
+          for section in required_sections:
+            if section.lower() not in content.lower():
+              missing_sections.append(section)
+          
+          if missing_sections:
+            print("❌ Missing sections:")
+            for section in missing_sections:
+              print(f"  - {section}")
+            sys.exit(1)
+          
+          # Check minimum content length
+          if len(content) < 300:
+            print(f"❌ README.md too short ({len(content)} chars, minimum 300)")
+            sys.exit(1)
+          
+          print("✅ README.md validation passed!")
+          print(f"   - All required sections present")
+          print(f"   - Content length: {len(content)} characters")
+          
+          EOF
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Documentation validation passed!**\n- README.md present\n- All required sections included\n- Adequate content length'
+            })

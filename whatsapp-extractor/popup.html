@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WA Group Extractor</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0f0d;
+      --surface: #111a15;
+      --surface2: #182119;
+      --border: #1f3025;
+      --green: #25d366;
+      --green-dim: #1aad52;
+      --green-glow: rgba(37,211,102,0.18);
+      --amber: #f0b429;
+      --amber-dim: #c8941f;
+      --red: #e05252;
+      --text: #e8f5ec;
+      --text-dim: #7a9985;
+      --text-muted: #3d5944;
+      --mono: 'DM Mono', monospace;
+      --display: 'Syne', sans-serif;
+    }
+
+    body {
+      width: 320px;
+      min-height: 420px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 18px 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 160% 80% at 110% 0%, rgba(37,211,102,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-icon {
+      width: 28px; height: 28px;
+      background: var(--green);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      box-shadow: 0 0 12px var(--green-glow);
+      flex-shrink: 0;
+    }
+    .logo-text {
+      font-family: var(--display);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .logo-sub {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+    .version-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── TOGGLE ── */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .toggle-label {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+    .status-dot.active {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green-glow);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .toggle-text {
+      font-family: var(--display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--text-dim);
+      transition: color 0.3s;
+    }
+    .toggle-text.active { color: var(--green); }
+
+    .switch {
+      position: relative;
+      width: 40px; height: 22px;
+      cursor: pointer;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      transition: all 0.3s;
+    }
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: all 0.3s;
+    }
+    .switch input:checked + .slider {
+      background: var(--green-dim);
+      border-color: var(--green);
+      box-shadow: 0 0 10px var(--green-glow);
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(18px);
+      background: white;
+    }
+
+    /* ── BODY ── */
+    .body { padding: 14px 18px; }
+
+    /* ── STATUS CARD ── */
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+      min-height: 70px;
+    }
+    .status-card-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .status-idle {
+      color: var(--text-muted);
+      font-size: 11px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .group-name-display {
+      font-family: var(--display);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .extraction-status {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green-dim), var(--green));
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      width: 0%;
+      position: relative;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+      border-radius: 0 4px 4px 0;
+    }
+    .progress-shimmer {
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    .progress-text {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 3px;
+      color: var(--text);
+    }
+    .stat-value.green { color: var(--green); }
+    .stat-value.amber { color: var(--amber); }
+    .stat-label {
+      font-size: 8px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── LOG ── */
+    .log-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .log-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      height: 80px;
+      overflow-y: auto;
+      padding: 8px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .log-entry {
+      font-size: 9.5px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 3px;
+      margin-bottom: 3px;
+    }
+    .log-entry:last-child { border-bottom: none; margin-bottom: 0; }
+    .log-entry.ok   { color: var(--green); }
+    .log-entry.warn { color: var(--amber); }
+    .log-entry.err  { color: var(--red); }
+    .log-timestamp { color: var(--text-muted); margin-right: 4px; }
+
+    /* ── BUTTONS ── */
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--display);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-download {
+      background: var(--green-dim);
+      color: white;
+      border: 1px solid var(--green);
+    }
+    .btn-download:hover { background: var(--green); box-shadow: 0 0 12px var(--green-glow); }
+    .btn-download:disabled { background: var(--surface2); border-color: var(--border); color: var(--text-muted); cursor: not-allowed; }
+    .btn-clear {
+      background: var(--surface2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-clear:hover { border-color: var(--red); color: var(--red); }
+    .btn-clear:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── FOOTER ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-note {
+      font-size: 8.5px;
+      color: var(--text-muted);
+    }
+    .wa-badge {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 8.5px;
+      color: var(--green);
+      opacity: 0.6;
+    }
+
+    /* ── NOT ON WA ── */
+    .not-wa {
+      text-align: center;
+      padding: 24px 18px;
+      color: var(--text-muted);
+    }
+    .not-wa .icon { font-size: 32px; margin-bottom: 10px; }
+    .not-wa p { font-size: 11px; line-height: 1.7; }
+    .not-wa .hint {
+      margin-top: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    .not-wa .hint code {
+      color: var(--green);
+      background: rgba(37,211,102,0.08);
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">📋</div>
+        <div>
+          <div class="logo-text">WA Extractor</div>
+          <div class="logo-sub">Group Contact Harvester</div>
+        </div>
+      </div>
+      <span class="version-badge">v1.0</span>
+    </div>
+
+    <div class="toggle-row" id="toggleRow">
+      <div class="toggle-label">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="toggle-text" id="toggleText">MONITORING OFF</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="mainToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- NOT ON WHATSAPP STATE -->
+  <div id="notWaView" style="display:none;">
+    <div class="not-wa">
+      <div class="icon">💬</div>
+      <p>Open <strong>WhatsApp Web</strong> in a tab to use this extension.</p>
+      <div class="hint">
+        Navigate to <code>web.whatsapp.com</code> then open a group chat to begin extraction.
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div id="mainView" class="body">
+
+    <!-- STATUS CARD -->
+    <div class="status-card" id="statusCard">
+      <div class="status-card-label">Current Status</div>
+      <div class="status-idle" id="idleMsg">
+        <span>⏸</span>
+        <span>Toggle ON to start monitoring</span>
+      </div>
+      <div id="activeStatus" style="display:none;">
+        <div class="group-name-display" id="groupNameDisplay">—</div>
+        <div class="extraction-status" id="extractionStatus">Waiting for group...</div>
+        <div class="progress-wrap" id="progressWrap" style="display:none;">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value green" id="statContacts">0</div>
+        <div class="stat-label">Contacts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value amber" id="statGroups">0</div>
+        <div class="stat-label">Groups</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statDupes">0</div>
+        <div class="stat-label">Dupes Skipped</div>
+      </div>
+    </div>
+
+    <!-- LOG -->
+    <div class="log-label">Activity Log</div>
+    <div class="log-box" id="logBox">
+      <div class="log-entry">— Ready —</div>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="btn-row">
+      <button class="btn btn-download" id="btnDownload" disabled>
+        ⬇ Download Excel
+      </button>
+      <button class="btn btn-clear" id="btnClear" disabled>
+        🗑 Clear Data
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-note">Data saved locally in browser</span>
+    <span class="wa-badge">● WhatsApp Web</span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

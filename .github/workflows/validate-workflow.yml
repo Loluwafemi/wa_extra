@@ -1,0 +1,54 @@
+name: Validate n8n Workflow
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'workflow.json'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Validate workflow.json
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+          
+          with open('workflow.json', 'r') as f:
+            workflow = json.load(f)
+          
+          # Check required fields
+          required = ['nodes', 'connections']
+          for field in required:
+            if field not in workflow:
+              print(f"❌ Missing: {field}")
+              sys.exit(1)
+          
+          # Check critical nodes
+          nodes = [n['name'] for n in workflow['nodes']]
+          critical = ['On form submission', 'Extract from File', 'Send WhatsApp Message']
+          for node in critical:
+            if node not in nodes:
+              print(f"❌ Missing critical node: {node}")
+              sys.exit(1)
+          
+          print("✅ Workflow validation passed!")
+          EOF
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Workflow validation passed!'
+            })
