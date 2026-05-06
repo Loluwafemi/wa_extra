@@ -59,9 +59,31 @@ pip install -r requirements.txt
 ```
 
 
+## Usage
+
+### Running Scripts
+
+### API Documentation
+
+## Online Usage
+
+
+
+## Project Structure
+
+
+
+## Contributing
+
+
+
+## License
+
+
 
 Made with ❤️ by Loluwafemi
 
 Last updated: May 1, 2026
+
 
 ### wa_extra
