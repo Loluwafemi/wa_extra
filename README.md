@@ -203,6 +203,6 @@ MIT License - Feel free to use and modify
 
 ---
 
-**Made with ❤️ by Loluwafemi**
+**Made with 🩸&😥💦 by Loluwafemi**
 
 Last updated: May 6, 2026
