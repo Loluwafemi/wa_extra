@@ -188,6 +188,7 @@ The main extraction selectors are in `whatsapp-extractor/content.js`:
 - `parseMemberNodes()` - Extracts member data
 
 If WhatsApp updates their UI, these selectors may need adjustment.
+[we want to create an ai model e.g gemma-4 that can automatically update the ui logic whenever whatsapp updates their ui.]
 
 ## Contributing
 
