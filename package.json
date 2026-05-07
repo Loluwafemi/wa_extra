@@ -1,0 +1,35 @@
+{
+  "name": "wa-group-extractor",
+  "version": "1.0.0",
+  "description": "Chrome extension to extract names and phone numbers from WhatsApp Web groups and export to Excel",
+  "private": true,
+  "keywords": [
+    "whatsapp",
+    "chrome-extension",
+    "contact-extraction",
+    "lead-generation",
+    "excel-export"
+  ],
+  "author": "Loluwafemi",
+  "license": "MIT",
+  "scripts": {
+    "lint": "node scripts/lint.js",
+    "build": "node scripts/build.js",
+    "test": "node scripts/test.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Loluwafemi/wa_extra.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Loluwafemi/wa_extra/issues"
+  },
+  "homepage": "https://github.com/Loluwafemi/wa_extra#readme"
+}
