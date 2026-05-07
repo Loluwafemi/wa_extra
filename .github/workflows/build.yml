@@ -42,8 +42,8 @@ jobs:
     - name: Install Node dependencies
       run: npm install --no-save 2>/dev/null || true
 
-    - name: Install Python dependencies
-      run: pip install -r requirements.txt
+    # - name: Install Python dependencies
+    #   run: pip install -r requirements.txt
 
     - name: Lint JavaScript
       run: pip install -r requirements.txt -q || echo "Python dependencies optional"
