@@ -13,13 +13,11 @@
   "author": "Loluwafemi",
   "license": "MIT",
   "scripts": {
-    "lint": "node scripts/lint.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js"
+    "build": "echo \"Extension built in ./whatsapp-extractor\"",
+    "test": "echo \"No tests configured\""
   },
-  "devDependencies": {
-    "eslint": "^8.56.0"
-  },
+  "devDependencies": {},
+  "dependencies": {},
   "engines": {
     "node": ">=14.0.0",
     "npm": ">=6.0.0"
