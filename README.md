@@ -44,6 +44,25 @@ cd wa_extra
 ### Step 2: Install Dependencies
 
 ```bash
+# create virtual environment
+
+# for windows use:
+python -m venv .venv          # create
+
+.venv\Scripts\activate        # activate environment
+
+
+# OR
+
+# for linux/wsl use:
+python3 -m venv .venv         # create
+
+source .venv/bin/activate     # activate environment
+
+
+
+# add dependencies
+
 npm install
 pip install -r requirements.txt
 ```
