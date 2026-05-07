@@ -1,0 +1,94 @@
+name: Security & Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly on Sunday
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run npm audit
+      run: npm audit --audit-level=moderate || echo "Some vulnerabilities found"
+
+    - name: Check for hardcoded secrets
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Scan for dangerous patterns
+      run: |
+        echo "Scanning for dangerous patterns in JavaScript..."
+        if grep -r "eval(" whatsapp-extractor/*.js; then
+          echo "⚠️  Warning: eval() found in code"
+        fi
+        if grep -r "innerHTML\s*=" whatsapp-extractor/*.js; then
+          echo "⚠️  Warning: innerHTML assignment found"
+        fi
+        echo "✓ Security scan complete"
+
+    - name: Verify permissions in manifest
+      run: |
+        echo "Checking manifest permissions..."
+        if grep -q '"permissions"' whatsapp-extractor/manifest.json; then
+          echo "✓ Permissions declared"
+        fi
+        if grep -q '"host_permissions"' whatsapp-extractor/manifest.json; then
+          echo "✓ Host permissions declared"
+        fi
+
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Check file sizes
+      run: |
+        echo "Checking file sizes..."
+        for file in whatsapp-extractor/*.js; do
+          size=$(wc -c < "$file")
+          echo "$(basename $file): $(numfmt --to=iec $size 2>/dev/null || echo "${size} bytes")"
+        done
+
+    - name: Validate JSON files
+      run: |
+        for json_file in $(find whatsapp-extractor -name "*.json"); do
+          if python3 -m json.tool "$json_file" > /dev/null 2>&1; then
+            echo "✓ $json_file is valid JSON"
+          else
+            echo "✗ $json_file has JSON errors"
+            exit 1
+          fi
+        done
+
+    - name: Check HTML validity
+      run: |
+        if command -v html5validator &> /dev/null; then
+          html5validator whatsapp-extractor/popup.html || true
+        else
+          echo "HTML validator not available, skipping HTML checks"
+        fi

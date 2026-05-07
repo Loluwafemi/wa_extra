@@ -1,0 +1,102 @@
+name: Release & Versioning
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        npm install
+        pip install -r requirements.txt
+
+    - name: Extract version from tag
+      id: tag_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Release version: $VERSION"
+
+    - name: Update version in manifest
+      run: |
+        python3 << EOF
+        import json
+        with open('whatsapp-extractor/manifest.json', 'r') as f:
+            manifest = json.load(f)
+        manifest['version'] = '${{ steps.tag_version.outputs.VERSION }}'
+        with open('whatsapp-extractor/manifest.json', 'w') as f:
+            json.dump(manifest, f, indent=2)
+        print(f"✓ Version updated to ${{ steps.tag_version.outputs.VERSION }}")
+        EOF
+
+    - name: Build extension
+      run: |
+        mkdir -p output
+        cd whatsapp-extractor
+        zip -r ../output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip . -x "*.DS_Store"
+        cd ..
+        echo "Extension packaged: output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip"
+
+    - name: Generate checksums
+      run: |
+        cd output
+        sha256sum wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip > wa-extractor-${{ steps.tag_version.outputs.VERSION }}.sha256
+        cat wa-extractor-${{ steps.tag_version.outputs.VERSION }}.sha256
+        cd ..
+
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip
+          output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.sha256
+        body: |
+          # WhatsApp Group Extractor v${{ steps.tag_version.outputs.VERSION }}
+
+          ## Release Notes
+          - Extension version: ${{ steps.tag_version.outputs.VERSION }}
+          - Build time: ${{ github.event.head_commit.timestamp }}
+
+          ## Installation
+          1. Download `wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip`
+          2. Extract the archive
+          3. Go to `chrome://extensions/`
+          4. Enable Developer Mode
+          5. Click "Load unpacked"
+          6. Select the extracted folder
+
+          ## Verify Integrity
+          ```bash
+          sha256sum -c wa-extractor-${{ steps.tag_version.outputs.VERSION }}.sha256
+          ```
+
+          ## Changes
+          See commit history for details.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release-${{ steps.tag_version.outputs.VERSION }}
+        path: |
+          output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.zip
+          output/wa-extractor-${{ steps.tag_version.outputs.VERSION }}.sha256
+        retention-days: 90

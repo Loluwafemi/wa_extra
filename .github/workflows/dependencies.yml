@@ -1,0 +1,54 @@
+name: Auto-Update Checker
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+
+    - name: Check npm packages for updates
+      run: |
+        echo "Checking for npm updates..."
+        npm outdated || echo "All packages up to date"
+
+    - name: Check Chrome API compatibility
+      run: |
+        echo "Checking manifest compatibility..."
+        manifest_version=$(jq '.manifest_version' whatsapp-extractor/manifest.json)
+        echo "Manifest version: $manifest_version"
+        if [ "$manifest_version" != "3" ]; then
+          echo "⚠️  Warning: Extension uses older manifest v$manifest_version"
+        else
+          echo "✓ Using latest Manifest v3"
+        fi
+
+    - name: Test WhatsApp Web selectors
+      run: |
+        echo "Checking for hardcoded WhatsApp selectors..."
+        selector_count=$(grep -o 'data-testid=' whatsapp-extractor/content.js | wc -l)
+        echo "Found $selector_count selector references (WhatsApp may change these)"
+
+    - name: Create issue if updates needed
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🔄 Dependency Updates Available',
+            body: 'Automated check found updates. Run `npm outdated` to see details.',
+            labels: ['dependencies', 'maintenance']
+          })

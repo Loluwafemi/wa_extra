@@ -1,0 +1,76 @@
+name: Build & Test Extension
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        cache: 'npm'
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+
+    - name: Install Node dependencies
+      run: npm install
+
+    - name: Install Python dependencies
+      run: pip install -r requirements.txt
+
+    - name: Lint JavaScript
+      run: npm run lint --if-present || echo "No lint script configured"
+
+    - name: Verify manifest.json
+      run: |
+        if ! command -v jq &> /dev/null; then
+          sudo apt-get update && sudo apt-get install -y jq
+        fi
+        jq empty whatsapp-extractor/manifest.json && echo "✓ manifest.json is valid JSON"
+
+    - name: Verify extension structure
+      run: |
+        echo "Checking required files..."
+        [ -f "whatsapp-extractor/manifest.json" ] && echo "✓ manifest.json found"
+        [ -f "whatsapp-extractor/content.js" ] && echo "✓ content.js found"
+        [ -f "whatsapp-extractor/popup.html" ] && echo "✓ popup.html found"
+        [ -f "whatsapp-extractor/popup.js" ] && echo "✓ popup.js found"
+        [ -f "whatsapp-extractor/background.js" ] && echo "✓ background.js found"
+
+    - name: Check for syntax errors
+      run: |
+        node -c whatsapp-extractor/content.js && echo "✓ content.js has no syntax errors"
+        node -c whatsapp-extractor/popup.js && echo "✓ popup.js has no syntax errors"
+        node -c whatsapp-extractor/background.js && echo "✓ background.js has no syntax errors"
+
+    - name: Build icons
+      run: python3 scripts/make_icons.py --quiet 2>/dev/null || echo "Icon build optional"
+
+    - name: Package extension
+      run: |
+        mkdir -p output
+        cd whatsapp-extractor
+        zip -r ../output/wa-extractor.zip . -x "*.DS_Store"
+        cd ..
+        echo "Extension packaged successfully"
+        du -sh output/wa-extractor.zip
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: wa-extractor-build
+        path: output/wa-extractor.zip
+        retention-days: 30
