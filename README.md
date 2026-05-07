@@ -213,4 +213,8 @@ MIT License - Feel free to use and modify
 
 **Made with 🩸&😥💦 by Loluwafemi**
 
+  Kindly support this project to grow | [![Buy Me A Coffee](https://img.buymeacoffee.com/button-api/?text=Sponsor%20on%20GitHub&emoji=❤️&slug=default&button_colour=fd6c1e&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=ffffff)](https://github.com/sponsors/Loluwafemi)
+--- | --- 
+<br/>
+
 Last updated: May 6, 2026
