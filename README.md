@@ -1,5 +1,10 @@
 # WhatsApp Group Extractor 📋
 
+<img src="./assets/wa-extra-1.png" alt="Alt text" width="200">
+<img src="./assets/wa-extra-0.png" alt="Alt text" width="200">
+<img src="./assets/wa-extra-2.png" alt="Alt text" width="200">
+
+<br>
 A powerful Chrome extension that automatically extracts contact names and phone numbers from WhatsApp Web groups. Perfect for lead generation, contact management, and building email lists from group members.
 
 ## Features
